@@ -131,18 +131,15 @@ body {
 
 /* 記事一覧 */
 .article-list {
-    max-height: calc(100% - 150px);
-    overflow-y: auto;
+    margin-top: 1rem;
 }
 
 .article-item {
-    padding: 10px;
-    border-bottom: 1px solid var(--sidebar-border);
+    padding: 0.5rem;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    transition: background-color 0.2s;
+    margin-bottom: 0.25rem;
 }
 
 .article-item:hover {
@@ -152,6 +149,65 @@ body {
 .article-item.active {
     background-color: var(--article-item-active);
     color: var(--article-item-active-text);
+}
+
+/* 新しい記事カテゴリとh2見出し用のスタイル */
+.article-category {
+    margin-bottom: 1rem;
+}
+
+.category-name {
+    font-weight: bold;
+    padding: 0.5rem;
+    background-color: var(--sidebar-bg);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.category-name:hover {
+    background-color: var(--article-item-hover);
+}
+
+.category-name.active {
+    background-color: var(--article-item-active);
+    color: var(--article-item-active-text);
+}
+
+.article-headings {
+    padding-left: 1rem;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+.article-category.active .article-headings {
+    display: block;
+}
+
+.article-heading {
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.article-heading:hover {
+    background-color: var(--article-item-hover);
+}
+
+.article-heading.active {
+    background-color: var(--article-item-active);
+    color: var(--article-item-active-text);
+}
+
+.no-headings {
+    font-style: italic;
+    color: var(--text-color);
+    opacity: 0.7;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9rem;
 }
 
 /* コンテンツエリア */
@@ -218,6 +274,31 @@ body {
 
 .article-content {
     color: var(--text-color);
+    line-height: 1.6;
+}
+
+.article-content h2 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.article-content h3 {
+    margin-top: 1.2rem;
+    margin-bottom: 0.8rem;
+}
+
+/* 見出しハイライト */
+.article-content h2.highlight {
+    background-color: rgba(13, 110, 253, 0.1);
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.5s ease;
+}
+
+[data-theme="dark"] .article-content h2.highlight {
+    background-color: rgba(97, 218, 251, 0.1);
 }
 
 .article-title {

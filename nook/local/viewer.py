@@ -161,6 +161,32 @@ def fetch_markdown(app_name: str, date_str: str) -> str:
     except Exception as e:
         return f"Error reading {file_path}: {e}"
 
+def extract_headings(markdown_text: str) -> dict:
+    """
+    Markdownテキストからh2見出しとその内容を抽出する
+    """
+    # h2見出し（## で始まる行）を検出
+    h2_pattern = r'^## (.+)$'
+    
+    # 行ごとに分割
+    lines = markdown_text.split('\n')
+    
+    headings = {}
+    current_h2 = None
+    
+    for i, line in enumerate(lines):
+        h2_match = re.match(h2_pattern, line.strip())
+        if h2_match:
+            current_h2 = h2_match.group(1).strip()
+            if current_h2 not in headings:
+                headings[current_h2] = []
+    
+    # 見出しがない場合は「サマリー」という見出しを追加
+    if not headings and markdown_text.strip():
+        headings["サマリー"] = []
+    
+    return headings
+
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request, date: str = None):
     if date is None:
@@ -181,6 +207,9 @@ async def index(request: Request, date: str = None):
     
     # コンテンツを取得
     contents = {name: fetch_markdown(name, date) for name in app_names}
+    
+    # 各アプリのh2見出しを抽出
+    headings = {name: extract_headings(content) for name, content in contents.items()}
     
     # 天気データを取得
     weather_data = get_weather_data()
@@ -207,6 +236,7 @@ async def index(request: Request, date: str = None):
         {
             "request": request,
             "contents": contents,
+            "headings": headings,
             "selected_date": date,
             "app_names": app_names,
             "weather": weather,

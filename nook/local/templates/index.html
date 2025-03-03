@@ -56,7 +56,18 @@
                     <h6 class="sidebar-heading">記事一覧</h6>
                     <div class="article-list">
                         {% for app_name, content in contents.items() %}
-                        <div class="article-item" data-app="{{ app_name }}">{{ app_name }}</div>
+                        <div class="article-category" data-app="{{ app_name }}">
+                            <div class="category-name">{{ app_name }}</div>
+                            <div class="article-headings">
+                                {% if headings[app_name] %}
+                                    {% for heading in headings[app_name].keys() %}
+                                    <div class="article-heading" data-app="{{ app_name }}" data-heading="{{ heading }}">{{ heading }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="no-headings">見出しがありません</div>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>

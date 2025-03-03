@@ -51,17 +51,18 @@ function updateThemeToggleIcon(theme) {
 
 // 記事アイテムのクリックイベントを設定
 function setupArticleItemListeners() {
-    const articleItems = document.querySelectorAll('.article-item');
-    
-    articleItems.forEach(item => {
-        item.addEventListener('click', function() {
-            // アクティブクラスの切り替え
-            articleItems.forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
+    // カテゴリ名のクリックイベント
+    const categoryNames = document.querySelectorAll('.category-name');
+    categoryNames.forEach(category => {
+        category.addEventListener('click', function() {
+            const articleCategory = this.closest('.article-category');
+            const appName = articleCategory.getAttribute('data-app');
             
-            // 記事データの取得
-            const appName = this.getAttribute('data-app');
-            const title = this.textContent.trim();
+            // アクティブ状態の切り替え
+            document.querySelectorAll('.article-category').forEach(cat => {
+                cat.classList.remove('active');
+            });
+            articleCategory.classList.add('active');
             
             // カテゴリナビゲーションの更新
             updateCategoryNav(appName);
@@ -71,9 +72,31 @@ function setupArticleItemListeners() {
         });
     });
     
-    // 初期表示時に最初の記事をアクティブにする
-    if (articleItems.length > 0 && !document.querySelector('.article-item.active')) {
-        articleItems[0].click();
+    // 見出しのクリックイベント
+    const headings = document.querySelectorAll('.article-heading');
+    headings.forEach(heading => {
+        heading.addEventListener('click', function() {
+            const appName = this.getAttribute('data-app');
+            const headingText = this.getAttribute('data-heading');
+            
+            // アクティブ状態の切り替え
+            document.querySelectorAll('.article-heading').forEach(h => {
+                h.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            // カテゴリナビゲーションの更新
+            updateCategoryNav(appName);
+            
+            // 記事コンテンツの読み込みと特定の見出しへのスクロール
+            loadArticleContent(appName, headingText);
+        });
+    });
+    
+    // 初期表示（最初のカテゴリを表示）
+    const firstCategory = document.querySelector('.category-name');
+    if (firstCategory) {
+        firstCategory.click();
     }
 }
 
@@ -130,7 +153,7 @@ function updateArticleList(appName) {
 }
 
 // 記事コンテンツの読み込み
-function loadArticleContent(appName) {
+function loadArticleContent(appName, headingText = null) {
     const date = document.getElementById('date-selector').value;
     const contentContainer = document.querySelector('.article-content');
     
@@ -159,6 +182,23 @@ function loadArticleContent(appName) {
                     
                     // 本文を設定
                     contentContainer.innerHTML = html.replace(/<h1>.*?<\/h1>/, '');
+                    
+                    // 特定の見出しが指定されている場合、その位置にスクロール
+                    if (headingText) {
+                        setTimeout(() => {
+                            const headingElement = Array.from(contentContainer.querySelectorAll('h2')).find(
+                                h2 => h2.textContent.trim() === headingText
+                            );
+                            if (headingElement) {
+                                headingElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                // 見出しをハイライト
+                                headingElement.classList.add('highlight');
+                                setTimeout(() => {
+                                    headingElement.classList.remove('highlight');
+                                }, 2000);
+                            }
+                        }, 100);
+                    }
                 } else {
                     contentContainer.innerHTML = '<div class="alert alert-info">この日付のデータはありません。</div>';
                 }
