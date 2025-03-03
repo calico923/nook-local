@@ -12,7 +12,7 @@ import toml
 from nook.local.common.gemini_client import create_client
 
 _MARKDOWN_FORMAT = """
-# {title}
+## {title}
 
 **Upvotes**: {upvotes}
 
