@@ -10,6 +10,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./nook:/app/nook
+      - ./logs:/app/logs
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
@@ -27,6 +28,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./nook:/app/nook
+      - ./logs:/app/logs
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}

@@ -3,8 +3,11 @@
 # 仮想環境をアクティベート
 source .venv/bin/activate
 
-# 環境変数を設定
+# 必要なディレクトリを作成
 export DATA_DIR=./data
+mkdir -p $DATA_DIR
+mkdir -p ./logs
+
 # .env ファイルから環境変数を読み込む
 if [ -f .env ]; then
   export $(grep -v '^#' .env | xargs)
