@@ -30,6 +30,13 @@ templates_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templa
 # テンプレートディレクトリの設定
 templates = Jinja2Templates(directory=templates_dir)
 
+# staticディレクトリが存在しない場合は作成
+static_dir = os.path.join(templates_dir, "static")
+os.makedirs(static_dir, exist_ok=True)
+
+# 静的ファイルの提供
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 # 対象のアプリ名リスト
 app_names = [
     "github_trending",
@@ -256,9 +263,6 @@ async def chat(topic_id: str, request: Request):
     response_text = gemini_client.chat_with_search(formatted_message)
 
     return {"response": response_text}
-
-# 静的ファイルのマウント
-app.mount("/static", StaticFiles(directory=os.path.join(templates_dir, "static")), name="static")
 
 if __name__ == "__main__":
     # データディレクトリのサブディレクトリを作成
