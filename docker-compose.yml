@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./nook:/app/nook
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}
+      - REDDIT_USER_AGENT=${REDDIT_USER_AGENT}
+      - LOCAL_MODE=true
+      - DATA_DIR=/app/data
+    command: python -m nook.local.viewer
+
+  # 情報収集用のコンテナ（オンデマンドで実行）
+  collector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./nook:/app/nook
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}
+      - REDDIT_USER_AGENT=${REDDIT_USER_AGENT}
+      - LOCAL_MODE=true
+      - DATA_DIR=/app/data
+    command: python -m nook.local.collector
