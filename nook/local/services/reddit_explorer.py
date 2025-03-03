@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 import sys
+import pytz  # タイムゾーン処理用のライブラリを追加
 
 import praw
 import toml
@@ -60,6 +61,10 @@ class RedditExplorer:
 
     def __call__(self) -> None:
         markdowns = []
+        # 日本時間で現在の日付を取得
+        jst = pytz.timezone('Asia/Tokyo')
+        current_date = datetime.datetime.now(jst).date()
+        
         for subreddit in self._subreddits:
             print(f"Fetching posts from r/{subreddit}...")
             posts = self._retrieve_hot_posts(subreddit)
@@ -69,11 +74,17 @@ class RedditExplorer:
                 post.summary = self._summarize_reddit_post(post)
                 markdowns.append(self._stylize_post(post))
 
-        self._store_summaries(markdowns)
+        # 現在の日付を渡す
+        self._store_summaries(markdowns, current_date)
         print("Reddit explorer completed")
 
-    def _store_summaries(self, summaries: list[str]) -> None:
-        date_str = datetime.date.today().strftime("%Y-%m-%d")
+    def _store_summaries(self, summaries: list[str], date: datetime.date = None) -> None:
+        # 日付が指定されていない場合は日本時間の現在の日付を使用
+        if date is None:
+            jst = pytz.timezone('Asia/Tokyo')
+            date = datetime.datetime.now(jst).date()
+            
+        date_str = date.strftime("%Y-%m-%d")
         
         # 環境変数から保存先ディレクトリを取得
         output_dir = os.path.join(self._data_dir, "reddit_explorer")
