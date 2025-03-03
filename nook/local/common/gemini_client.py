@@ -4,21 +4,28 @@ import google.generativeai as genai
 def create_client(use_search=False):
     """Gemini APIクライアントを作成する"""
     api_key = os.environ.get("GEMINI_API_KEY")
+    model_name = os.environ.get("GEMINI_MODEL_NAME")
     genai.configure(api_key=api_key)
     
     class GeminiClient:
-        def __init__(self, model_name="gemini-pro"):
+        def __init__(self, model_name=model_name):
+            # 最新のモデル名を使用
             self.model = genai.GenerativeModel(model_name)
         
         def generate_content(self, contents, system_instruction=None):
             """コンテンツを生成する"""
-            if system_instruction:
-                chat = self.model.start_chat(system_instruction=system_instruction)
-                response = chat.send_message(contents)
-            else:
-                response = self.model.generate_content(contents)
-            
-            return response.text
+            try:
+                if system_instruction:
+                    # 最新のAPIでは、system_instructionをプロンプトの一部として組み込む
+                    prompt = f"{system_instruction}\n\n{contents}"
+                    response = self.model.generate_content(prompt)
+                else:
+                    response = self.model.generate_content(contents)
+                
+                return response.text
+            except Exception as e:
+                print(f"Gemini API呼び出しエラー: {e}")
+                return f"エラーが発生しました: {str(e)}"
         
         def chat_with_search(self, message):
             """検索結果を活用してチャットする（ローカル版では検索機能は簡略化）"""

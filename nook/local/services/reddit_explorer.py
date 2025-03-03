@@ -4,6 +4,7 @@ import datetime
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
+import sys
 
 import praw
 import toml
@@ -73,6 +74,8 @@ class RedditExplorer:
 
     def _store_summaries(self, summaries: list[str]) -> None:
         date_str = datetime.date.today().strftime("%Y-%m-%d")
+        
+        # 環境変数から保存先ディレクトリを取得
         output_dir = os.path.join(self._data_dir, "reddit_explorer")
         os.makedirs(output_dir, exist_ok=True)
         
@@ -203,31 +206,31 @@ class RedditExplorer:
     def _system_instruction_format(
         self, title: str, comments: str, selftext: str
     ) -> str:
-        self_text = inspect.cleandoc(
-            f"""
-            投稿文
-            '''
-            {selftext}
-            '''
-            """
-        )
+        self_text = ""
+        if selftext:
+            self_text = inspect.cleandoc(
+                f"""
+                投稿文
+                '''
+                {selftext}
+                '''
+                """
+            ) + "\n\n"
+            
         return inspect.cleandoc(
             f"""
             以下のテキストは、Redditのあるポストのタイトルと{"投稿文、そして" if selftext else ""}当ポストに対する主なコメントです。
-            よく読んで、ユーザーの質問に答えてください。
+よく読んで、ユーザーの質問に答えてください。
 
-            タイトル
-            '''
-            {title}
-            '''
+タイトル
+'''
+{title}
+'''
 
-            {self_text if selftext else ""}
-
-            コメント
-            '''
-            {comments}
-            '''
-            """
+{self_text}コメント
+'''
+{comments}
+'''"""
         )
 
     @property
