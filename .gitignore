@@ -4,3 +4,4 @@
 ./test/*
 ./reddit-solo-test/*
 ./gemini_solo_test/*
+./.venv/*
