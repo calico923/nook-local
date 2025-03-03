@@ -294,5 +294,5 @@ if __name__ == "__main__":
     for app_name in app_names:
         os.makedirs(os.path.join(data_dir, app_name), exist_ok=True)
     
-    print(f"Starting Nook viewer at http://localhost:8080")
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    print("Starting Nook viewer at http://localhost:8080")
+    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="debug")

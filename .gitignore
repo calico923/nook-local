@@ -36,3 +36,8 @@ dist/
 test/
 gemini_solo_test/
 data/
+
+# Local development
+ui-images/
+run_local.sh
+logs/
