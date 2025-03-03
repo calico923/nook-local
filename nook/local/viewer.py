@@ -27,6 +27,10 @@ app = FastAPI()
 data_dir = os.environ.get("DATA_DIR", "./data")
 templates_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 
+# サーバー設定
+server_host = os.environ.get("SERVER_HOST", "0.0.0.0")
+server_port = int(os.environ.get("SERVER_PORT", 8080))
+
 # テンプレートディレクトリの設定
 templates = Jinja2Templates(directory=templates_dir)
 
@@ -324,5 +328,5 @@ if __name__ == "__main__":
     for app_name in app_names:
         os.makedirs(os.path.join(data_dir, app_name), exist_ok=True)
     
-    print("Starting Nook viewer at http://localhost:8081")
-    uvicorn.run(app, host="0.0.0.0", port=8081, log_level="debug")
+    print(f"Starting Nook viewer at http://{server_host if server_host != '0.0.0.0' else 'localhost'}:{server_port}")
+    uvicorn.run(app, host=server_host, port=server_port, log_level="debug")
