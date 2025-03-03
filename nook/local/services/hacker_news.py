@@ -2,6 +2,7 @@ import os
 import datetime
 import json
 import time
+import pytz
 from pathlib import Path
 
 import requests
@@ -63,7 +64,11 @@ class HackerNewsCollector:
     
     def _save_articles_as_markdown(self, articles):
         """記事をMarkdownフォーマットで保存"""
-        date_str = datetime.date.today().strftime("%Y-%m-%d")
+        # 日本時間で現在の日付を取得
+        jst = pytz.timezone('Asia/Tokyo')
+        date = datetime.datetime.now(jst).date()
+        date_str = date.strftime("%Y-%m-%d")
+        
         output_dir = os.path.join(self._data_dir, "hacker_news")
         os.makedirs(output_dir, exist_ok=True)
         

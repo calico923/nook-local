@@ -2,6 +2,7 @@ import os
 import datetime
 import time
 import inspect
+import pytz
 from pathlib import Path
 
 import arxiv
@@ -178,7 +179,11 @@ class PaperSummarizer:
             print("No papers to save")
             return
         
-        date_str = datetime.date.today().strftime("%Y-%m-%d")
+        # 日本時間で現在の日付を取得
+        jst = pytz.timezone('Asia/Tokyo')
+        date = datetime.datetime.now(jst).date()
+        date_str = date.strftime("%Y-%m-%d")
+        
         output_dir = os.path.join(self._data_dir, "paper_summarizer")
         os.makedirs(output_dir, exist_ok=True)
         
