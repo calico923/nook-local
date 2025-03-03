@@ -26,14 +26,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 記事アイテムのクリックイベント
-    setupArticleItemListeners();
-
     // カテゴリナビゲーションのイベントリスナー
     setupCategoryNavListeners();
 
     // チャット機能の初期化
     initializeChat();
+    
+    // 初期表示（最初のカテゴリを表示）
+    const firstCategoryLink = document.querySelector('.nav-category .nav-link');
+    if (firstCategoryLink) {
+        firstCategoryLink.click();
+    }
 });
 
 // テーマアイコンの更新
@@ -49,71 +52,6 @@ function updateThemeToggleIcon(theme) {
     }
 }
 
-// 記事アイテムのクリックイベントを設定
-function setupArticleItemListeners() {
-    // カテゴリ名のクリックイベント
-    const categoryNames = document.querySelectorAll('.category-name');
-    categoryNames.forEach(category => {
-        category.addEventListener('click', function() {
-            const articleCategory = this.closest('.article-category');
-            const appName = articleCategory.getAttribute('data-app');
-            
-            // アクティブ状態の切り替え
-            document.querySelectorAll('.article-category').forEach(cat => {
-                cat.classList.remove('active');
-            });
-            articleCategory.classList.add('active');
-            
-            // カテゴリナビゲーションの更新
-            updateCategoryNav(appName);
-            
-            // 記事コンテンツの読み込み
-            loadArticleContent(appName);
-        });
-    });
-    
-    // 見出しのクリックイベント
-    const headings = document.querySelectorAll('.article-heading');
-    headings.forEach(heading => {
-        heading.addEventListener('click', function() {
-            const appName = this.getAttribute('data-app');
-            const headingText = this.getAttribute('data-heading');
-            
-            // アクティブ状態の切り替え
-            document.querySelectorAll('.article-heading').forEach(h => {
-                h.classList.remove('active');
-            });
-            this.classList.add('active');
-            
-            // カテゴリナビゲーションの更新
-            updateCategoryNav(appName);
-            
-            // 記事コンテンツの読み込みと特定の見出しへのスクロール
-            loadArticleContent(appName, headingText);
-        });
-    });
-    
-    // 初期表示（最初のカテゴリを表示）
-    const firstCategory = document.querySelector('.category-name');
-    if (firstCategory) {
-        firstCategory.click();
-    }
-}
-
-// カテゴリナビゲーションの更新
-function updateCategoryNav(activeApp) {
-    const navLinks = document.querySelectorAll('.nav-category .nav-link');
-    
-    navLinks.forEach(link => {
-        const appName = link.getAttribute('data-app');
-        if (appName === activeApp) {
-            link.classList.add('active');
-        } else {
-            link.classList.remove('active');
-        }
-    });
-}
-
 // カテゴリナビゲーションのイベントリスナー設定
 function setupCategoryNavListeners() {
     const navLinks = document.querySelectorAll('.nav-category .nav-link');
@@ -126,29 +64,97 @@ function setupCategoryNavListeners() {
             navLinks.forEach(l => l.classList.remove('active'));
             this.classList.add('active');
             
-            // 記事リストの更新
+            // 選択されたカテゴリ名を取得
             const appName = this.getAttribute('data-app');
-            updateArticleList(appName);
             
-            // 最初の記事を表示
-            const firstArticle = document.querySelector(`.article-item[data-app="${appName}"]`);
-            if (firstArticle) {
-                firstArticle.click();
-            }
+            // 記事コンテンツの読み込み
+            loadArticleContent(appName);
+            
+            // 左メニューの見出しを更新
+            updateHeadingsInLeftMenu(appName);
         });
     });
 }
 
-// 記事リストの更新
-function updateArticleList(appName) {
-    const articleItems = document.querySelectorAll('.article-item');
+// 左メニューの見出しを更新する関数
+function updateHeadingsInLeftMenu(appName) {
+    const headingsContainer = document.getElementById('headings-container');
+    if (!headingsContainer) return;
     
-    articleItems.forEach(item => {
-        if (item.getAttribute('data-app') === appName) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
+    // 日付を取得
+    const date = document.getElementById('date-selector').value;
+    
+    // 選択されたカテゴリの見出しを取得
+    fetch(`/fetch_markdown?app_name=${appName}&date=${date}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.content) {
+                // マークダウンから見出しを抽出
+                const headings = extractHeadingsFromMarkdown(data.content);
+                
+                if (headings.length > 0) {
+                    // 見出しリストを生成
+                    let headingsHTML = '';
+                    headings.forEach(heading => {
+                        headingsHTML += `<div class="article-heading" data-app="${appName}" data-heading="${heading}">${heading}</div>`;
+                    });
+                    headingsContainer.innerHTML = headingsHTML;
+                    
+                    // 見出しのクリックイベントを設定
+                    setupHeadingClickEvents();
+                } else {
+                    headingsContainer.innerHTML = '<div class="no-headings">見出しがありません</div>';
+                }
+            } else {
+                headingsContainer.innerHTML = '<div class="no-headings">データがありません</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching headings:', error);
+            headingsContainer.innerHTML = '<div class="no-headings">エラーが発生しました</div>';
+        });
+}
+
+// マークダウンから見出しを抽出する関数
+function extractHeadingsFromMarkdown(markdown) {
+    const headings = [];
+    const lines = markdown.split('\n');
+    
+    // h2見出し（## で始まる行）を検出
+    const h2Pattern = /^## (.+)$/;
+    
+    lines.forEach(line => {
+        const match = line.match(h2Pattern);
+        if (match) {
+            headings.push(match[1].trim());
         }
+    });
+    
+    // 見出しがない場合は「サマリー」を追加
+    if (headings.length === 0 && markdown.trim()) {
+        headings.push('サマリー');
+    }
+    
+    return headings;
+}
+
+// 見出しのクリックイベントを設定
+function setupHeadingClickEvents() {
+    const headings = document.querySelectorAll('.article-heading');
+    headings.forEach(heading => {
+        heading.addEventListener('click', function() {
+            const appName = this.getAttribute('data-app');
+            const headingText = this.getAttribute('data-heading');
+            
+            // アクティブ状態の切り替え
+            document.querySelectorAll('.article-heading').forEach(h => {
+                h.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            // 記事コンテンツの読み込みと特定の見出しへのスクロール
+            loadArticleContent(appName, headingText);
+        });
     });
 }
 
@@ -249,26 +255,20 @@ function initializeChat() {
 function toggleChat() {
     const chatContainer = document.querySelector('.chat-container');
     if (chatContainer) {
-        const isVisible = chatContainer.style.display === 'flex';
-        chatContainer.style.display = isVisible ? 'none' : 'flex';
-        
-        if (!isVisible) {
-            const messageInput = document.getElementById('message-input');
-            if (messageInput) {
-                messageInput.focus();
-            }
-        }
+        chatContainer.classList.toggle('active');
     }
 }
 
-// メッセージを追加
-function addMessage(text, sender) {
+// チャットメッセージを追加
+function addMessage(message, sender) {
     const chatBody = document.querySelector('.chat-body');
     if (chatBody) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', `${sender}-message`);
-        messageElement.textContent = text;
+        messageElement.textContent = message;
         chatBody.appendChild(messageElement);
+        
+        // 最新のメッセージが見えるようにスクロール
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 } 
