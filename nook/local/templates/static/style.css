@@ -18,6 +18,7 @@
     --tab-active-text: #333333;
     --tab-inactive-text: #0d6efd;
     --heading-highlight: rgba(13, 110, 253, 0.2);
+    --bg-color-rgb: 255, 255, 255;
 }
 
 /* ダークモード */
@@ -39,6 +40,7 @@
     --tab-active-text: #ffffff;
     --tab-inactive-text: #61dafb;
     --heading-highlight: rgba(97, 218, 251, 0.3);
+    --bg-color-rgb: 18, 18, 18;
 }
 
 /* 基本スタイル */
@@ -243,6 +245,8 @@ body {
 
 .article-content {
     line-height: 1.6;
+    position: relative;
+    min-height: 200px;
 }
 
 .article-content h2 {
@@ -410,4 +414,18 @@ body {
         bottom: 10px;
         right: 5%;
     }
+}
+
+/* ローディングオーバーレイ */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(var(--bg-color-rgb), 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
 } 

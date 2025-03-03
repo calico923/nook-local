@@ -164,8 +164,27 @@ function loadArticleContent(appName, headingText = null) {
     const contentContainer = document.querySelector('.article-content');
     
     if (contentContainer) {
-        // ローディング表示
-        contentContainer.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        // 現在のスクロール位置を保存
+        const scrollPosition = contentContainer.scrollTop;
+        
+        // ローディング表示（既存のコンテンツを保持しながらローディングインジケータを表示）
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'loading-overlay';
+        loadingIndicator.innerHTML = '<div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>';
+        
+        // 既存のローディングオーバーレイを削除
+        const existingOverlay = contentContainer.querySelector('.loading-overlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+        
+        // コンテンツが空でない場合のみオーバーレイを追加
+        if (!contentContainer.innerHTML.includes('記事を選択してください')) {
+            contentContainer.appendChild(loadingIndicator);
+        } else {
+            // 初回読み込み時はコンテンツを置き換え
+            contentContainer.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        }
         
         // 記事データの取得
         fetch(`/fetch_markdown?app_name=${appName}&date=${date}`)
@@ -191,19 +210,25 @@ function loadArticleContent(appName, headingText = null) {
                     
                     // 特定の見出しが指定されている場合、その位置にスクロール
                     if (headingText) {
-                        setTimeout(() => {
-                            const headingElement = Array.from(contentContainer.querySelectorAll('h2')).find(
-                                h2 => h2.textContent.trim() === headingText
-                            );
-                            if (headingElement) {
-                                headingElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                // 見出しをハイライト
-                                headingElement.classList.add('highlight');
-                                setTimeout(() => {
-                                    headingElement.classList.remove('highlight');
-                                }, 2000);
+                        // 即座に見出しを検索
+                        const headingElement = Array.from(contentContainer.querySelectorAll('h2')).find(
+                            h2 => h2.textContent.trim() === headingText
+                        );
+                        
+                        if (headingElement) {
+                            // 画像の読み込みを待ってからスクロール
+                            if (document.readyState === 'complete') {
+                                scrollToHeading(headingElement);
+                            } else {
+                                // ページの読み込みが完了していない場合は、完了を待つ
+                                window.addEventListener('load', () => {
+                                    scrollToHeading(headingElement);
+                                });
                             }
-                        }, 100);
+                        }
+                    } else {
+                        // 見出しが指定されていない場合は、前回のスクロール位置を復元
+                        contentContainer.scrollTop = scrollPosition;
                     }
                 } else {
                     contentContainer.innerHTML = '<div class="alert alert-info">この日付のデータはありません。</div>';
@@ -214,6 +239,18 @@ function loadArticleContent(appName, headingText = null) {
                 contentContainer.innerHTML = '<div class="alert alert-danger">コンテンツの読み込み中にエラーが発生しました。</div>';
             });
     }
+}
+
+// 見出しへのスクロール処理を行う関数
+function scrollToHeading(headingElement) {
+    // スクロール処理
+    headingElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // 見出しをハイライト
+    headingElement.classList.add('highlight');
+    setTimeout(() => {
+        headingElement.classList.remove('highlight');
+    }, 2000);
 }
 
 // チャット機能の初期化
