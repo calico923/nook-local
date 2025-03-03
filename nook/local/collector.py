@@ -4,6 +4,10 @@ import importlib
 import datetime
 import json
 from pathlib import Path
+from dotenv import load_dotenv
+
+# .envファイルを読み込む
+load_dotenv()
 
 # 元のモジュールをインポート
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

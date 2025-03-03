@@ -4,6 +4,10 @@ import datetime
 import json
 import re
 from pathlib import Path
+from dotenv import load_dotenv
+
+# .envファイルを読み込む
+load_dotenv()
 
 import uvicorn
 import requests

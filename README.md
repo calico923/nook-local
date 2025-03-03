@@ -6,10 +6,6 @@
 
 Nookは、テック系の最新情報を自動的に収集し、要約するWebアプリです。Reddit、Hacker News、GitHub Trending、技術ブログ、学術論文など多様な情報源から情報を収集し、Google Gemini APIを使用して日本語で要約します。オリジナルの[Nook](https://github.com/discus0434/nook)をAWSからローカルのDockerコンテナ環境に移植したものです。
 
-## スクリーンショット
-
-![Nook Demo](https://raw.githubusercontent.com/discus0434/nook/main/assets/screenshots/nook-demo.gif)
-
 ## 特徴
 
 - **多様な情報源からの自動収集・要約**
