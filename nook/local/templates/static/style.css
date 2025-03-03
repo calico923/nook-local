@@ -9,7 +9,8 @@
     --border-color: rgba(0, 0, 0, 0.1);
     --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     --tab-active-bg: #ffffff;
-    --tab-active-text: #0d6efd;
+    --tab-active-text: #333333;
+    --tab-inactive-text: #0d6efd;
     --tab-hover-bg: #e9ecef;
     --link-color: #0d6efd;
     --chat-bg: #f8f9fa;
@@ -28,6 +29,7 @@
     --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     --tab-active-bg: #2d2d2d;
     --tab-active-text: #ffffff;
+    --tab-inactive-text: #61dafb;
     --tab-hover-bg: #333333;
     --link-color: #61dafb;
     --chat-bg: #2d2d2d;
@@ -107,10 +109,11 @@ body {
 /* タブ */
 .nav-tabs {
     margin-bottom: 15px;
+    border-bottom-color: var(--border-color);
 }
 
 .nav-tabs .nav-link {
-    color: var(--text-color);
+    color: var(--tab-inactive-text);
     border: 1px solid transparent;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
