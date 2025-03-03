@@ -185,17 +185,42 @@ async def index(request: Request, date: str = None):
     # 天気データを取得
     weather_data = get_weather_data()
 
+    # 天気データを新しいフォーマットに変換
+    weather = {
+        "temperature": weather_data["temp"],
+        "icon": "sunny"  # デフォルト値
+    }
+    
+    # 天気コードに基づいてアイコンを設定
+    weather_code = weather_data.get("weather_code", "100")
+    if weather_code.startswith("1"):  # 晴れ系
+        weather["icon"] = "sunny"
+    elif weather_code.startswith("2"):  # くもり系
+        weather["icon"] = "cloudy"
+    elif weather_code.startswith("3"):  # 雨系
+        weather["icon"] = "rainy"
+    elif weather_code.startswith("4"):  # 雪系
+        weather["icon"] = "snowy"
+
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
             "contents": contents,
-            "date": date,
+            "selected_date": date,
             "app_names": app_names,
-            "weather_data": weather_data,
+            "weather": weather,
             "available_dates": available_dates,
         },
     )
+
+@app.get("/fetch_markdown", response_class=JSONResponse)
+async def get_markdown(app_name: str, date: str):
+    """
+    指定されたアプリ名と日付のMarkdownコンテンツを取得するAPIエンドポイント
+    """
+    content = fetch_markdown(app_name, date)
+    return {"content": content}
 
 @app.get("/api/weather", response_class=JSONResponse)
 async def get_weather():

@@ -1,325 +1,111 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="light">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nook - テック情報収集ツール</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.2.0/github-markdown.min.css">
-    <link rel="stylesheet" href="/static/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <title>Nook Local</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
 </head>
 <body>
+    <!-- ナビゲーションバー -->
     <nav class="navbar navbar-expand-lg fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="/">Nook</a>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Nook Local</a>
             <div class="d-flex align-items-center">
-                <div class="weather-info text-white">
-                    <span class="weather-icon">{{ weather_data.weather_icon }}</span>
-                    <span>{{ weather_data.temp }}℃</span>
+                {% if weather %}
+                <div class="weather-info">
+                    <span class="weather-icon">
+                        {% if weather.icon == 'sunny' %}☀️
+                        {% elif weather.icon == 'cloudy' %}☁️
+                        {% elif weather.icon == 'rainy' %}🌧️
+                        {% elif weather.icon == 'snowy' %}❄️
+                        {% else %}🌤️
+                        {% endif %}
+                    </span>
+                    <span>{{ weather.temperature }}°C</span>
                 </div>
-                <div class="theme-toggle" id="themeToggle">
-                    <span class="theme-toggle-icon">🌓</span>
-                    <span class="theme-toggle-text">ダーク</span>
+                {% endif %}
+                <div class="theme-toggle" id="theme-toggle">
+                    <span class="theme-toggle-icon">☀️</span>
+                    <span class="theme-toggle-text">ライトモード</span>
                 </div>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-            </div>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">ホーム</a>
-                    </li>
-                </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="date-selector d-flex justify-content-between align-items-center">
-                    <h2>{{ date }} の情報</h2>
-                    <div>
-                        <select id="dateSelect" class="form-select" onchange="window.location.href='/?date=' + this.value">
-                            {% for available_date in available_dates %}
-                            <option value="{{ available_date }}" {% if available_date == date %}selected{% endif %}>{{ available_date }}</option>
+    <!-- メインコンテンツ -->
+    <div class="main-container">
+        <div class="row h-100">
+            <!-- 左サイドバー -->
+            <div class="col-md-3 sidebar-column">
+                <div class="sidebar">
+                    <!-- 日付セレクション -->
+                    <div class="date-section">
+                        <h6 class="sidebar-heading">日付</h6>
+                        <select id="date-selector" class="form-select">
+                            {% for date_str in available_dates %}
+                            <option value="{{ date_str }}" {% if date_str == selected_date %}selected{% endif %}>{{ date_str }}</option>
                             {% endfor %}
                         </select>
                     </div>
+                    
+                    <!-- 記事一覧 -->
+                    <h6 class="sidebar-heading">記事一覧</h6>
+                    <div class="article-list">
+                        {% for app_name, content in contents.items() %}
+                        <div class="article-item" data-app="{{ app_name }}">{{ app_name }}</div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                <ul class="nav nav-tabs" id="myTab" role="tablist">
-                    {% for app_name in app_names %}
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link {% if loop.index == 1 %}active{% endif %}" id="{{ app_name }}-tab" data-bs-toggle="tab" data-bs-target="#{{ app_name }}" type="button" role="tab">
-                            {{ app_name.replace('_', ' ').title() }}
-                        </button>
-                    </li>
-                    {% endfor %}
-                </ul>
-                <div class="tab-content" id="myTabContent">
-                    {% for app_name in app_names %}
-                    <div class="tab-pane fade {% if loop.index == 1 %}show active{% endif %}" id="{{ app_name }}" role="tabpanel">
-                        <div class="content-wrapper">
-                            <article class="markdown-body" id="{{ app_name }}-content">
-                                <!-- コンテンツはJavaScriptで変換されます -->
-                            </article>
+            
+            <!-- コンテンツエリア -->
+            <div class="col-md-9 content-column">
+                <!-- カテゴリナビゲーション -->
+                <div class="category-nav">
+                    <ul class="nav nav-category">
+                        {% for app_name in contents.keys() %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-app="{{ app_name }}">{{ app_name }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <!-- 記事詳細 -->
+                <div class="article-detail-container">
+                    <div class="article-detail">
+                        <h2 class="article-title">記事を選択してください</h2>
+                        <div class="article-content">
+                            <div class="alert alert-info">左側のサイドバーから記事を選択してください。</div>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 
     <!-- チャットウィンドウ -->
-    <div id="chatContainer" class="chat-container">
+    <div class="chat-container">
         <div class="chat-header">
-            <div id="chatTitle">この記事について質問する</div>
-            <span class="close-chat" onclick="closeChat()">&times;</span>
+            <span>チャットアシスタント</span>
+            <span class="close-chat">&times;</span>
         </div>
-        <div id="chatBody" class="chat-body">
-            <div class="bot-message message">この記事について何か質問がありますか？</div>
+        <div class="chat-body">
+            <div class="message bot-message">こんにちは！どのようにお手伝いできますか？</div>
         </div>
         <div class="chat-footer">
-            <div class="input-group">
-                <input type="text" id="messageInput" class="form-control" placeholder="質問を入力...">
-                <button class="btn btn-primary" onclick="sendMessage()">送信</button>
-            </div>
+            <form id="chat-form" class="d-flex">
+                <input type="text" id="message-input" class="form-control me-2" placeholder="メッセージを入力...">
+                <button type="submit" class="btn btn-primary">送信</button>
+            </form>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // テーマ切り替え機能
-        document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.getElementById('themeToggle');
-            const themeToggleText = themeToggle.querySelector('.theme-toggle-text');
-            const themeToggleIcon = themeToggle.querySelector('.theme-toggle-icon');
-            
-            // ローカルストレージからテーマ設定を取得
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            
-            // テーマ表示を更新
-            updateThemeToggle(savedTheme);
-            
-            // テーマ切り替えイベント
-            themeToggle.addEventListener('click', function() {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
-                document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                
-                updateThemeToggle(newTheme);
-            });
-            
-            function updateThemeToggle(theme) {
-                if (theme === 'dark') {
-                    themeToggleText.textContent = 'ライト';
-                    themeToggleIcon.textContent = '☀️';
-                } else {
-                    themeToggleText.textContent = 'ダーク';
-                    themeToggleIcon.textContent = '🌓';
-                }
-            }
-        });
-
-        // Markdownレンダリング
-        document.addEventListener('DOMContentLoaded', function() {
-            // Jinjaテンプレートからコンテンツを取得し、JavaScriptオブジェクトに変換
-            const contentsData = {};
-            {% for app_name in app_names %}
-            contentsData["{{ app_name }}"] = {{ contents[app_name] | tojson | safe }};
-            {% endfor %}
-
-            for (const [appName, content] of Object.entries(contentsData)) {
-                const element = document.getElementById(`${appName}-content`);
-                if (element) {
-                    let htmlContent = '';
-                    try {
-                        // Markdownをレンダリング
-                        htmlContent = marked.parse(content);
-                    } catch (e) {
-                        console.error(`Error parsing markdown for ${appName}:`, e);
-                        htmlContent = `<p>Error rendering content: ${e.message}</p><pre>${content}</pre>`;
-                    }
-                    element.innerHTML = htmlContent;
-
-                    // 各見出しにチャットアイコンを追加
-                    const headings = element.querySelectorAll('h1, h2, h3');
-                    headings.forEach((heading, index) => {
-                        const chatButton = document.createElement('span');
-                        chatButton.className = 'chat-button';
-                        chatButton.innerHTML = '💬 質問する';
-                        chatButton.setAttribute('data-topic', `${appName}-${index}`);
-                        chatButton.setAttribute('data-title', heading.textContent);
-                        chatButton.onclick = function() {
-                            openChat(this.getAttribute('data-topic'), this.getAttribute('data-title'), appName);
-                        };
-                        heading.appendChild(chatButton);
-                    });
-                }
-            }
-        });
-
-        // チャット関連の変数
-        let currentTopic = '';
-        let currentAppName = '';
-        let chatHistory = {};
-
-        // チャットを開く
-        function openChat(topic, title, appName) {
-            currentTopic = topic;
-            currentAppName = appName;
-            
-            // チャット履歴の初期化
-            if (!chatHistory[topic]) {
-                chatHistory[topic] = [];
-            }
-            
-            // チャットのタイトルを設定
-            document.getElementById('chatTitle').textContent = title;
-            
-            // チャットボディをクリア
-            const chatBody = document.getElementById('chatBody');
-            chatBody.innerHTML = '';
-            
-            // 履歴を表示
-            chatHistory[topic].forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${msg.role}-message`;
-                messageDiv.innerHTML = msg.role === 'bot' ? marked.parse(msg.text) : msg.text;
-                chatBody.appendChild(messageDiv);
-            });
-            
-            // 初期メッセージがなければ追加
-            if (chatHistory[topic].length === 0) {
-                const welcomeMsg = {
-                    role: 'bot',
-                    text: 'この記事について何か質問がありますか？'
-                };
-                chatHistory[topic].push(welcomeMsg);
-                
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message bot-message';
-                messageDiv.textContent = welcomeMsg.text;
-                chatBody.appendChild(messageDiv);
-            }
-            
-            // チャットウィンドウを表示
-            document.getElementById('chatContainer').style.display = 'block';
-            
-            // 入力フィールドにフォーカス
-            document.getElementById('messageInput').focus();
-            
-            // スクロールを最下部に
-            chatBody.scrollTop = chatBody.scrollHeight;
-        }
-
-        // チャットを閉じる
-        function closeChat() {
-            document.getElementById('chatContainer').style.display = 'none';
-        }
-
-        // メッセージ送信
-        async function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value.trim();
-            
-            if (!message) return;
-            
-            const chatBody = document.getElementById('chatBody');
-            
-            // ユーザーメッセージを表示
-            const userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'message user-message';
-            userMessageDiv.textContent = message;
-            chatBody.appendChild(userMessageDiv);
-            
-            // 入力フィールドをクリアしてスクロール
-            messageInput.value = '';
-            chatBody.scrollTop = chatBody.scrollHeight;
-            
-            // チャット履歴に追加
-            chatHistory[currentTopic].push({
-                role: 'user',
-                text: message
-            });
-            
-            // ローディングメッセージ
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message bot-message';
-            loadingDiv.textContent = '考え中...';
-            chatBody.appendChild(loadingDiv);
-            
-            try {
-                // チャット履歴をシリアライズ
-                const historyText = chatHistory[currentTopic]
-                    .filter(msg => msg.role !== 'bot' || msg.text !== 'この記事について何か質問がありますか？')
-                    .map(msg => `${msg.role === 'user' ? 'ユーザー' : 'AI'}: ${msg.text}`)
-                    .join('\n\n');
-                
-                // APIリクエスト
-                const response = await fetch(`/chat/${currentTopic}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        markdown: document.getElementById(`${currentAppName}-content`).textContent,
-                        chat_history: historyText
-                    })
-                });
-                
-                const data = await response.json();
-                
-                // ローディングメッセージを削除
-                chatBody.removeChild(loadingDiv);
-                
-                // 応答を表示
-                const botMessageDiv = document.createElement('div');
-                botMessageDiv.className = 'message bot-message';
-                botMessageDiv.innerHTML = marked.parse(data.response);
-                chatBody.appendChild(botMessageDiv);
-                
-                // チャット履歴に追加
-                chatHistory[currentTopic].push({
-                    role: 'bot',
-                    text: data.response
-                });
-                
-            } catch (error) {
-                console.error('Error sending message:', error);
-                
-                // ローディングメッセージを削除
-                chatBody.removeChild(loadingDiv);
-                
-                // エラーメッセージ
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'message bot-message';
-                errorDiv.textContent = 'エラーが発生しました。もう一度お試しください。';
-                chatBody.appendChild(errorDiv);
-            }
-            
-            // スクロールを最下部に
-            chatBody.scrollTop = chatBody.scrollHeight;
-        }
-
-        // Enterキーでメッセージ送信
-        document.getElementById('messageInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
