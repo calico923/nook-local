@@ -21,11 +21,15 @@ Nookは、テック系の最新情報を自動的に収集し、要約するWeb�
 - **シンプルなWebインターフェース**
   - 日付別に整理された情報を表示
   - レスポンシブデザインでモバイル対応
+  
+- **オフライン対応**
+  - Gemini APIのクォータ制限に達した場合でも、ダミーレスポンスで動作継続
+  - APIキーなしでもテスト・開発可能
 
 ## 必要条件
 
 - Docker と Docker Compose
-- Google Gemini API キー
+- Google Gemini API キー（オプション、なくても動作可能）
 - Reddit API キー（クライアントID、クライアントシークレット）
 - インターネット接続（情報収集・要約のため）
 
@@ -49,14 +53,22 @@ REDDIT_CLIENT_SECRET=your_reddit_client_secret
 REDDIT_USER_AGENT=nook-local/1.0.0
 ```
 
+**注意**: Gemini APIキーが設定されていない場合や、クォータ制限に達した場合は、自動的にダミーレスポンスが生成されます。開発・テスト目的であれば、APIキーなしでも動作します。
+
 ### 3. Dockerイメージのビルドと起動
 
 ```bash
 # イメージをビルド
-docker-compose build
+docker compose build
 
-# Webインターフェースを起動（バックグラウンド実行）
-docker-compose up -d viewer
+# Webインターフェースとコレクターを起動（バックグラウンド実行）
+docker compose up -d
+
+# Webインターフェースのみを起動
+docker compose up -d viewer
+
+# コレクターのみを実行（フォアグラウンド）
+docker compose up collector
 ```
 
 ## 使い方
@@ -66,10 +78,10 @@ docker-compose up -d viewer
 情報を収集するには次のコマンドを実行します：
 
 ```bash
-docker-compose up collector
+docker compose up collector
 ```
 
-これは各情報源（Reddit、Hacker News、GitHub Trendingなど）から最新の情報を収集し、ローカルに保存します。
+これは各情報源（Reddit、Hacker News、GitHub Trendingなど）から最新の情報を収集し、ローカルに保存します。コレクターは実行後に自動的に終了します。
 
 ### Webインターフェースへのアクセス
 
@@ -88,14 +100,13 @@ cronを使って毎日自動的に情報収集を行うよう設定できます�
 crontab -e
 
 # 毎朝6時に実行する例
-0 6 * * * cd /path/to/nook-local && docker-compose up collector > /tmp/nook-collector.log 2>&1
+0 6 * * * cd /path/to/nook-local && docker compose up collector > /tmp/nook-collector.log 2>&1
 ```
 
 ## プロジェクト構造
 
 ```
 nook-local/
-├── app.py                 # メインアプリケーション
 ├── docker-compose.yml     # Dockerコンテナ設定
 ├── Dockerfile             # Dockerイメージ定義
 ├── requirements.txt       # Python依存関係
@@ -105,8 +116,15 @@ nook-local/
         ├── collector.py   # 情報収集の統合スクリプト
         ├── viewer.py      # Webインターフェース
         ├── common/        # 共通ユーティリティ
+        │   ├── gemini_client.py  # Gemini APIクライアント
+        │   └── ...
         ├── services/      # 各情報源のコレクター
-        └── templates/     # HTMLテンプレート
+        │   ├── reddit_explorer.py
+        │   ├── hacker_news.py
+        │   ├── github_trending.py
+        │   ├── tech_feed.py
+        │   └── paper_summarizer.py
+        └── static/        # CSSとJavaScript
 ```
 
 ## カスタマイズ
@@ -122,18 +140,47 @@ nook-local/
 
 ### UIカスタマイズ
 
-Webインターフェースは`nook/local/templates/index.html`を編集することでカスタマイズ可能です。
+Webインターフェースは`nook/local/static/`ディレクトリ内のCSSとJavaScriptファイルを編集することでカスタマイズ可能です。
+
+### Gemini APIの設定
+
+`nook/local/common/gemini_client.py`を編集することで、Gemini APIの動作をカスタマイズできます：
+
+- モデル名の変更: `model_name`変数を編集
+- ダミーレスポンスの調整: `DummyClient`クラス内の`general_responses`と`topic_responses`を編集
 
 ## トラブルシューティング
+
+### 一般的な問題
 
 **問題**: コンテナが起動しない  
 **解決策**: ログを確認し、必要な環境変数が設定されているか確認してください
 ```bash
-docker-compose logs
+docker compose logs
 ```
 
 **問題**: APIエラーが発生する  
-**解決策**: APIキーの有効性と、レート制限に達していないことを確認してください
+**解決策**: APIキーの有効性と、レート制限に達していないことを確認してください。Gemini APIのクォータ制限に達した場合は、自動的にダミーレスポンスが生成されます。
+
+**問題**: データが表示されない  
+**解決策**: コレクターが正常に実行されたか確認し、`data`ディレクトリ内にファイルが生成されているか確認してください。
+
+### Gemini APIのクォータ制限
+
+Gemini APIのクォータ制限に達した場合（429エラー）、自動的にダミーレスポンスが生成されます。これにより、APIキーがなくても、または制限に達しても、アプリケーションは継続して動作します。
+
+ダミーレスポンスはコンテキストに応じて生成され、以下のカテゴリに対応しています：
+- Reddit/Python/プログラミング関連
+- GitHub/リポジトリ/トレンド関連
+- 論文/研究/arXiv関連
+- ニュース/Hacker News/テック関連
+
+## 最近の更新
+
+- Gemini APIのクォータ制限に対応するフォールバックメカニズムを実装
+- コンテキストに応じたダミーレスポンス生成機能を追加
+- Docker Compose設定の改善
+- 日本語UIの強化
 
 ## ライセンス
 
@@ -142,4 +189,4 @@ docker-compose logs
 ## 謝辞
 
 - [オリジナルのNookプロジェクト](https://github.com/discus0434/nook)の作者に感謝します
-- このプロジェクトで使用しているオープンソースライブラリの作者たちに感謝します# nook-local-mcp
+- このプロジェクトで使用しているオープンソースライブラリの作者たちに感謝します
